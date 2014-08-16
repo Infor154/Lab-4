@@ -17,7 +17,7 @@ include('../Model/database.php');
     'consumer_key' => "5Mxg8hTW6bXmi7AXlbmBIXHg1",
     'consumer_secret' => "HevfmignG9EksUAg5IqSvVKdzBBoB4LTA1FBn7lnTsmXcn5ECx"
 );
-       //gets text field from html file
+       //gets both text fields from html file
        
 $keyword = $_POST['keyword'];
 $keyword2 = $_POST['keyword2'];
@@ -32,7 +32,7 @@ $q = str_replace('','%3A',$query);
 
 //sets the url and the request method
 $url = 'https://api.twitter.com/1.1/search/tweets.json';
-$getfield = '?q='. $q;
+$getfield = '?q='. $q.'&result_type=mixed&count=100';
 $requestMethod = 'GET';
 
 // creates a new TwitterAPIExchange object with the authetication data and calls the function that gets the results form twitter
@@ -42,17 +42,12 @@ $response = $twitter->setGetfield($getfield)
     ->performRequest();
 $tweets = json_decode($response)->statuses;
 $objects=tweets2array($tweets);
-echo '<br/> <br/> Total tweets '.count($objects);
-//prints out the query string, and url
-//echo'<h3>'.$query.'</h3>';
-//echo'<h3>URL for the Query</h3>';
-////echo'<a href='.$url.'>' .$url.'</a>';
-//echo'<a href='.$url.'?q='.$query.'>' .$url.'?q='.$query.'</a>';
-//echo'<hr>';
+//creates a new database table
 $database = new Database('twitter',"$keyword");
+//inserts tweets into the table
 $database->insertTweets($objects,"$keyword");
  
-//makes the keyword compatible with the url
+//makes the sencond keyword compatible with the url and 
 
 $keywords2 = explode(" ",$keyword2);
 $query2 = implode($plus,$keywords2);
@@ -60,7 +55,7 @@ $q2 = str_replace('','%3A',$query2);
 
 
 //sets the url and the request method
-$getfield = '?q='. $q2;
+$getfield = '?q='. $q2.'&result_type=mixed&count=100';
 
 
 // creates a new TwitterAPIExchange object with the authetication data and calls the function that gets the results form twitter
@@ -68,15 +63,14 @@ $twitter2 = new TwitterAPIExchange($settings);
 $response2 = $twitter2->setGetfield($getfield)
     ->buildOauth($url, $requestMethod)
     ->performRequest();
-//prints out the results in json format
 $tweets2 = json_decode($response2)->statuses;
 $objects2=tweets2array($tweets2);
-echo '<br/> <br/> Total tweets '.count($objects2);
-
+//creates new table for secind keyword
 $database2 = new Database('twitter',"$keyword2");
-
+//insert tweets into table
 $database2->insertTweets($objects2,"$keyword2");
-$database2->relationships($keyword,$keyword2);
-//include ('../View/view.php');
 
+//calls file the prints result.
+include ('../View/view.php');
+//closes database connection
 $database->close();
